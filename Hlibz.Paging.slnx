@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Hlibz.Paging/Hlibz.Paging.csproj" />
+    <Project Path="src/Hlibz.Paging.EntityFrameworkCore/Hlibz.Paging.EntityFrameworkCore.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Hlibz.Paging.Tests/Hlibz.Paging.Tests.csproj" />
+    <Project Path="tests/Hlibz.Paging.EntityFrameworkCore.Tests/Hlibz.Paging.EntityFrameworkCore.Tests.csproj" />
+  </Folder>
+</Solution>

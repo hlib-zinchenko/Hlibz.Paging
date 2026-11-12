@@ -1,0 +1,27 @@
+# Weekly, grouped: one PR for all NuGet updates, one for all GitHub Actions.
+# CI runs the tests on every PR, so a green check is what makes these safe to merge.
+# EF Core is pinned per target framework (see Directory.Packages.props), so a major bump would
+# put the wrong major on a target: patches and minors only.
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    ignore:
+      - dependency-name: Microsoft.EntityFrameworkCore*
+        update-types: ["version-update:semver-major"]
+    groups:
+      nuget:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]

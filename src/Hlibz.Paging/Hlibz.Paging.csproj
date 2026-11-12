@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup Label="NuGet metadata">
+    <PackageId>Hlibz.Paging</PackageId>
+    <Description>Paging and sorting for list endpoints: [Sortable] marks which DTO properties a client may sort by and the default order, SortableDto parses a client's sort string (customer_name,created_at:desc, keys in any casing) against them with client-facing errors and checks every DTO at startup, PagingParams (page, per page), PagedData&lt;T&gt; with its paging metadata (total items, total pages, has next page), and an OrderBy(SortingParams) that builds the LINQ expression, so the same sorting runs in the database or in memory. No dependencies. Hlibz.Paging.EntityFrameworkCore pages an IQueryable with PaginateAsync.</Description>
+    <PackageTags>paging;pagination;sorting;linq;dto;query-string;api</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Hlibz.Paging.Tests" />
+  </ItemGroup>
+
+</Project>

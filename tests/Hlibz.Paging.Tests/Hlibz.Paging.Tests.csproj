@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Hlibz.Paging\Hlibz.Paging.csproj" />
+  </ItemGroup>
+
+</Project>

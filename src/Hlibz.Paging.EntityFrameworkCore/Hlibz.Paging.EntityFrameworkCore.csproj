@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup Label="NuGet metadata">
+    <PackageId>Hlibz.Paging.EntityFrameworkCore</PackageId>
+    <Description>PaginateAsync for Entity Framework Core: sorts an IQueryable by Hlibz.Paging's SortingParams, counts it and loads one page in two queries, returning PagedData&lt;T&gt; with its paging metadata. Sorting is translated to SQL, strings compared case-insensitively.</Description>
+    <PackageTags>paging;pagination;sorting;entity-framework-core;efcore;linq</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hlibz.Paging\Hlibz.Paging.csproj" />
+  </ItemGroup>
+
+</Project>
