@@ -21,7 +21,13 @@ Two NuGet packages released together from one tag, extracted from Lighthouse's p
   case-insensitive); no keys = sort by `Id`; a key naming no property throws
   `SortingParamNotFoundException` naming every bad key. No dependencies.
 - `src/Hlibz.Paging.EntityFrameworkCore`: `PaginateAsync` (count, then the page; `All` in one
-  query). EF Core is referenced per target framework (8/9/10/11, see `Directory.Packages.props`).
+  query). EF Core is referenced per target framework (10/11, see `Directory.Packages.props`).
+- `samples/Orders.Api`: a plain minimal API on EF Core SQLite in memory (one connection kept
+  open, seeded at startup) using both packages and no other Hlibz package: `/orders`
+  (`PaginateAsync` on a projected DTO, a bad sort as `Results.ValidationProblem`),
+  `/orders/export` (`PagingParams.All`), `/customers` (in-memory `Paginate`) and
+  `SortableDto.ValidateAll` at startup. net11.0 only, never packed. `samples/README.md` maps each
+  request to what it shows; keep it and `Orders.Api.http` in step with the API.
 
 Query binding (`page`, `per_page`, `sort` on a base query class) deliberately isn't a package:
 its parameter names, maximum page size and 400 mapping are each API's own conventions, and
@@ -35,7 +41,9 @@ direction) is ascending; parsed keys name C# properties, not snake_case.
 
 ## Requires
 
-* .NET 11 SDK, plus the .NET 8, 9 and 10 runtimes to run every test target.
+* The .NET SDK `global.json` pins (11.0.100, patches roll forward; Dependabot bumps it), plus
+  the .NET 10 runtime to run both test targets. Pinned because warnings are errors and
+  `AnalysisMode=All`: a new SDK feature band brings new analyzer rules.
 
 ## Commands
 
@@ -44,6 +52,7 @@ dotnet build
 dotnet test
 dotnet test -f net11.0
 dotnet pack -c Release -o ./nupkg
+dotnet run --project samples/Orders.Api    # :5390, try Orders.Api.http
 ```
 
 ## Conventions
@@ -53,8 +62,20 @@ Explicit types, no `var`. Implementation details are internal, in `Internal/`. T
 Microsoft Testing Platform, named `Subject_WithCondition_ExpectedOutcome`; EF tests run against
 SQLite in memory.
 
-Targets net8.0-net11.0 from one source, C# 14. Versions are central (`Directory.Packages.props`);
-shared NuGet metadata and `Version` live in `Directory.Build.props`; release by pushing a
-`vX.Y.Z` tag (both packages, one version). Each package has its own `src/<Package>/README.md`
-(packed, shown on nuget.org, absolute links only); the root `README.md` is the full
-documentation; keep them in step when an API changes.
+Targets net10.0 and net11.0 from one source, C# 14. Versions are central
+(`Directory.Packages.props`); shared NuGet metadata and `Version` live in
+`Directory.Build.props`; release by pushing a `vX.Y.Z` tag (both packages, one version; see
+Releasing). Each package has its own `src/<Package>/README.md` (packed, shown on nuget.org,
+absolute links only); the root `README.md` is the full documentation; keep them in step when an
+API changes.
+
+## Releasing
+
+1. Set `Version` in `Directory.Build.props`, commit, then push the tag `vX.Y.Z`.
+2. The user approves the `release` environment run.
+3. Once the run succeeds and
+   `https://api.nuget.org/v3-flatcontainer/<lowercase id>/index.json` lists the version, Claude
+   creates the GitHub release that `PackageReleaseNotes` links to:
+   `gh release create vX.Y.Z --verify-tag --title X.Y.Z [--prerelease when the version has a suffix] --notes-file <notes>`.
+   Claude writes the notes from `git log <previous tag>..vX.Y.Z`: breaking changes first, then
+   features and fixes, then one nuget.org link per package. Nothing is attached.

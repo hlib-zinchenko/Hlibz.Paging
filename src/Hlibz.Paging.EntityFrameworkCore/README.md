@@ -1,4 +1,4 @@
-![Hlibz.Paging icon](https://raw.githubusercontent.com/hlib-zinchenko/Hlibz.Paging/main/docs/icon.png)
+![Hlibz.Paging.EntityFrameworkCore icon](https://raw.githubusercontent.com/hlib-zinchenko/Hlibz.Paging/main/docs/icon.png)
 
 # Hlibz.Paging.EntityFrameworkCore
 
@@ -26,5 +26,9 @@ It sorts in the database (strings case-insensitively), runs a `COUNT`, then load
 in one. Sort the projected DTO when its property names differ from the entity's: sort keys name
 the type being sorted.
 
-Full documentation:
-[github.com/hlib-zinchenko/Hlibz.Paging](https://github.com/hlib-zinchenko/Hlibz.Paging).
+## Related packages
+
+- [Hlibz.Paging](https://www.nuget.org/packages/Hlibz.Paging): `[Sortable]`, `SortableDto` and
+  `PagingParams`, which this package builds on.
+
+Full documentation and a sample: [github.com/hlib-zinchenko/Hlibz.Paging](https://github.com/hlib-zinchenko/Hlibz.Paging).

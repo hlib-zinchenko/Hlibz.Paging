@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/Orders.Api/Orders.Api.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Hlibz.Paging/Hlibz.Paging.csproj" />
     <Project Path="src/Hlibz.Paging.EntityFrameworkCore/Hlibz.Paging.EntityFrameworkCore.csproj" />

@@ -17,7 +17,7 @@ string is checked against it, and one call sorts, counts and loads the page.
 | `Hlibz.Paging` | `PagingParams`, `SortingParams`, `[Sortable]`, `SortableDto` (parses a client's sort string against the DTO, plus a startup check), `PagedData<T>`, `OrderBy(SortingParams)` and in-memory `Paginate`. No dependencies. |
 | `Hlibz.Paging.EntityFrameworkCore` | `PaginateAsync`: sort, count and load one page of an `IQueryable`. |
 
-Targets .NET 8, 9, 10 and 11.
+Targets .NET 10 and 11.
 
 ## Quick start
 
@@ -181,6 +181,35 @@ properties, so sort the projected DTO, not the entity, when their names differ.
 * No maximum page size: `new PagingParams(1, int.MaxValue)` is `PagingParams.All`. Cap the
   client's value before building `PagingParams` if that matters.
 * Offset paging (`OFFSET`/`LIMIT`), not keyset paging.
+
+## Samples
+
+[`samples/Orders.Api`](https://github.com/hlib-zinchenko/Hlibz.Paging/blob/main/samples/README.md)
+is a plain minimal API on EF Core with SQLite in memory: paged and sorted orders from the
+database, a bad sort key as a `400`, every order in one query with `PagingParams.All`, and
+customers paged in memory, with a `.http` file for each request.
+
+```bash
+dotnet run --project samples/Orders.Api   # http://localhost:5390
+```
+
+## Related packages
+
+- [Hlibz.Results](https://www.nuget.org/packages/Hlibz.Results): return a bad sort string as
+  `Result.Invalid(new Dictionary<string, string[]> { ["sort"] = [error] })`, so it gets the same
+  error body as every other failure.
+- [Hlibz.MinimalApi.Endpoints](https://www.nuget.org/packages/Hlibz.MinimalApi.Endpoints):
+  minimal API endpoints as classes, for list endpoints among the rest.
+- [Hlibz.OpenApi.AspNetCore](https://www.nuget.org/packages/Hlibz.OpenApi.AspNetCore): OpenAPI
+  transformers for Microsoft.AspNetCore.OpenApi.
+
+## Versioning
+
+Every package in this repository is released under one version, from one `vX.Y.Z` tag. EF Core
+is declared as a minimum for each target framework (10.0.15 on .NET 10, 11.0.0 on .NET 11): a
+newer patch of it needs no new release here, reference it in your app and NuGet uses it.
+
+Release notes: [GitHub Releases](https://github.com/hlib-zinchenko/Hlibz.Paging/releases).
 
 ## License
 

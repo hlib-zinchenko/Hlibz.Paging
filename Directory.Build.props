@@ -1,14 +1,13 @@
 <Project>
 
     <PropertyGroup>
-        <TargetFrameworks>net8.0;net9.0;net10.0;net11.0</TargetFrameworks>
+        <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <!--
             One language version for every target framework, pinned rather than "latest" so the
-            build doesn't change with the installed SDK. C# 14 because the library multi-targets
-            net8.0-net11.0 from one source; C# 15 features (unions, closed hierarchies, with(...))
-            would not compile for the older targets.
+            build doesn't change with the installed SDK. C# 14 so the net10.0 target compiles from
+            the same source as net11.0.
         -->
         <LangVersion>14</LangVersion>
         <AnalysisMode>All</AnalysisMode>

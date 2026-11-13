@@ -11,17 +11,10 @@
     </ItemGroup>
 
     <!--
-        EF Core per major, matching each target framework: a net8.0 consumer gets EF Core 8, a
-        net11.0 one EF Core 11. Dependabot only takes patch and minor updates.
+        EF Core per major, matching each target framework: a net10.0 consumer gets EF Core 10, a
+        net11.0 one EF Core 11. Both are minimums: packed as ">=" dependencies, so an app picks any
+        newer patch itself. Dependabot only takes patch and minor updates.
     -->
-    <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
-        <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="8.0.34" />
-        <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.34" />
-    </ItemGroup>
-    <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
-        <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="9.0.23" />
-        <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.23" />
-    </ItemGroup>
     <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
         <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.15" />
         <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.15" />

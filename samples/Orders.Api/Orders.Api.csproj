@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <!-- In your own app: PackageReference Include="Hlibz.Paging.EntityFrameworkCore" (it brings Hlibz.Paging). -->
+    <ProjectReference Include="..\..\src\Hlibz.Paging.EntityFrameworkCore\Hlibz.Paging.EntityFrameworkCore.csproj" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+  </ItemGroup>
+
+</Project>

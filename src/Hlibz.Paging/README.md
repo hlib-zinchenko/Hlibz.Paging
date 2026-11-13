@@ -52,6 +52,12 @@ SortableDto.ValidateAll([typeof(OrderDto).Assembly]);   // at startup
 * `PagedData<T>`: the page's items and `PagingMetadata` (`TotalItems`, `CurrentPage`, `PerPage`,
   `TotalPages`, `HasNextPage`).
 
-[Hlibz.Paging.EntityFrameworkCore](https://www.nuget.org/packages/Hlibz.Paging.EntityFrameworkCore)
-loads a page from the database with `PaginateAsync`. Full documentation:
-[github.com/hlib-zinchenko/Hlibz.Paging](https://github.com/hlib-zinchenko/Hlibz.Paging).
+## Related packages
+
+- [Hlibz.Paging.EntityFrameworkCore](https://www.nuget.org/packages/Hlibz.Paging.EntityFrameworkCore):
+  `PaginateAsync` loads a page from the database.
+- [Hlibz.Results](https://www.nuget.org/packages/Hlibz.Results): return a bad sort string as
+  `Result.Invalid(new Dictionary<string, string[]> { ["sort"] = [error] })`, so it gets the same
+  error body as every other failure.
+
+Full documentation and a sample: [github.com/hlib-zinchenko/Hlibz.Paging](https://github.com/hlib-zinchenko/Hlibz.Paging).
