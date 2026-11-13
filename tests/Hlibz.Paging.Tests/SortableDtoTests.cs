@@ -111,4 +111,32 @@ public sealed class SortableDtoTests
     {
         SortableDto.ValidateAll([typeof(SortableDto).Assembly]);
     }
+
+    [Fact]
+    public void ValidateAll_WithAbstractBase_SkipsIt()
+    {
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+            () => SortableDto.ValidateAll([typeof(AuditedDto).Assembly]));
+
+        Assert.DoesNotContain(typeof(AuditedDto).FullName!, exception.Message, StringComparison.Ordinal);
+        Assert.Equal(["Id", "UpdatedAt"], SortableDto.For<AuditedOrderDto>().Properties.Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void ValidateAll_WithTypes_ChecksOnlyThose()
+    {
+        SortableDto.ValidateAll([typeof(OrderDto), typeof(AuditedOrderDto)]);
+    }
+
+    [Fact]
+    public void ValidateAll_WithInvalidTypes_NamesEach()
+    {
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+            () => SortableDto.ValidateAll([typeof(OrderDto), typeof(NoDefaultDto)]));
+
+        Assert.Equal(
+            $"{typeof(NoDefaultDto).FullName} must have exactly one property marked with "
+            + "[Sortable(IsDefault = true)], found 0.",
+            exception.Message);
+    }
 }

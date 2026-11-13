@@ -1,38 +1,47 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Hlibz.Paging;
 
 /// <summary>
-/// One page of a list, with its <see cref="PagingMetadata"/>.
+/// One page of a list, with its <see cref="PagingMetadata"/>. Every property is
+/// <see langword="required"/>, so a JSON schema of the page (an OpenAPI document, say) lists them
+/// all as required.
 /// </summary>
 /// <typeparam name="T">The item type.</typeparam>
 public sealed class PagedData<T>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PagedData{T}"/> class, for serializers and
+    /// object initializers. To build a page from a count, use
+    /// <see cref="PagedData{T}(IReadOnlyList{T}, int, PagingParams)"/>.
+    /// </summary>
+    public PagedData()
+    {
+    }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="PagedData{T}"/> class.
     /// </summary>
     /// <param name="data">The items on the page.</param>
     /// <param name="totalItems">The number of items in the whole list.</param>
     /// <param name="pagingParams">The page.</param>
+    [SetsRequiredMembers]
     public PagedData(IReadOnlyList<T> data, int totalItems, PagingParams pagingParams)
-        : this(data, new PagingMetadata(totalItems, pagingParams))
-    {
-    }
-
-    private PagedData(IReadOnlyList<T> data, PagingMetadata pagingMetadata)
     {
         ArgumentNullException.ThrowIfNull(data);
         Data = data;
-        PagingMetadata = pagingMetadata;
+        PagingMetadata = new PagingMetadata(totalItems, pagingParams);
     }
 
     /// <summary>
     /// Gets the items on the page.
     /// </summary>
-    public IReadOnlyList<T> Data { get; }
+    public required IReadOnlyList<T> Data { get; init; }
 
     /// <summary>
     /// Gets where the page sits in the whole list.
     /// </summary>
-    public PagingMetadata PagingMetadata { get; }
+    public required PagingMetadata PagingMetadata { get; init; }
 
     /// <summary>
     /// An empty list's page.
@@ -50,6 +59,6 @@ public sealed class PagedData<T>
     public PagedData<TDestination> Map<TDestination>(Func<T, TDestination> map)
     {
         ArgumentNullException.ThrowIfNull(map);
-        return new PagedData<TDestination>([.. Data.Select(map)], PagingMetadata);
+        return new PagedData<TDestination> { Data = [.. Data.Select(map)], PagingMetadata = PagingMetadata };
     }
 }

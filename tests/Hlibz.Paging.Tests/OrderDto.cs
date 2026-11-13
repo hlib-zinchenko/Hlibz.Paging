@@ -38,3 +38,15 @@ public sealed class OpenRow<T>
     [Sortable]
     public T? Value { get; init; }
 }
+
+public abstract class AuditedDto
+{
+    [Sortable]
+    public DateTime UpdatedAt { get; init; }
+}
+
+public sealed class AuditedOrderDto : AuditedDto
+{
+    [Sortable(IsDefault = true)]
+    public int Id { get; init; }
+}

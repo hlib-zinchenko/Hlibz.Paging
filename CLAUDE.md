@@ -10,13 +10,16 @@ Two NuGet packages released together from one tag, extracted from Lighthouse's p
 
 - `src/Hlibz.Paging`: `PagingParams` (page from 1, default page size 100, `All`, `Skip` capped
   so a huge page can't overflow), `SortingParam`/`SortingParams`, `[Sortable]`,
-  `PagedData<T>` + `PagingMetadata`, `SortingExtensions` (`OrderBy(SortingParams)` builds the
+  `PagedData<T>` + `PagingMetadata` (every property `required` + `init`, so OpenAPI schemas
+  list them as required and System.Text.Json reads them back; a parameterless constructor for
+  serializers and a `[SetsRequiredMembers]` one that works out `TotalPages`/`HasNextPage`), `SortingExtensions` (`OrderBy(SortingParams)` builds the
   `OrderBy`/`ThenBy` expression, strings via `ToUpper()`; in-memory `Paginate`), and
   `SortableDto`: a DTO's `[Sortable]` properties (cached per type, exactly one `IsDefault` or
   `InvalidOperationException`), `TryParse` of a client's sort string (`Internal/SortStringParser`:
   `key[:asc|desc],...`; parsed keys name properties as declared; errors name the allowed
   properties through an optional `JsonNamingPolicy`), and `ValidateAll(assemblies)`, which checks
-  every closed type with a `[Sortable]` property and throws one exception naming every bad DTO.
+  every closed, non-abstract type with a `[Sortable]` property, or `ValidateAll(types)`, which
+  checks the types given; either throws one exception naming every bad DTO.
   Keys match properties in any casing (`Internal/PropertyLookup`: `_` and `-` ignored,
   case-insensitive); no keys = sort by `Id`; a key naming no property throws
   `SortingParamNotFoundException` naming every bad key. No dependencies.

@@ -1,3 +1,7 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Schema;
+
 namespace Hlibz.Paging.Tests;
 
 public sealed class PagingTests
@@ -71,4 +75,38 @@ public sealed class PagingTests
         Assert.Equal(0, page.PagingMetadata.TotalItems);
         Assert.Equal(3, page.PagingMetadata.CurrentPage);
     }
+
+    [Fact]
+    public void PagedData_JsonSchema_RequiresEveryProperty()
+    {
+        JsonNode schema = JsonSerializerOptions.Web.GetJsonSchemaAsNode(typeof(PagedData<int>));
+
+        Assert.Equal(["data", "pagingMetadata"], Required(schema));
+        Assert.Equal(
+            ["totalItems", "currentPage", "perPage", "totalPages", "hasNextPage"],
+            Required(schema["properties"]!["pagingMetadata"]!));
+    }
+
+    [Fact]
+    public void PagedData_Json_RoundTrips()
+    {
+        PagedData<int> page = new([1, 2], 7, new PagingParams(2, 2));
+
+        PagedData<int> read = JsonSerializer.Deserialize<PagedData<int>>(
+            JsonSerializer.Serialize(page, JsonSerializerOptions.Web),
+            JsonSerializerOptions.Web)!;
+
+        Assert.Equal([1, 2], read.Data);
+        Assert.Equivalent(page.PagingMetadata, read.PagingMetadata, strict: true);
+    }
+
+    [Fact]
+    public void PagedData_JsonWithoutMetadata_Throws()
+    {
+        Assert.Throws<JsonException>(
+            () => JsonSerializer.Deserialize<PagedData<int>>("""{ "data": [] }""", JsonSerializerOptions.Web));
+    }
+
+    private static string[] Required(JsonNode schema) =>
+        [.. schema["required"]!.AsArray().Select(name => name!.GetValue<string>())];
 }

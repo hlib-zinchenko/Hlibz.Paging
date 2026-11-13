@@ -44,13 +44,15 @@ SortableDto.ValidateAll([typeof(OrderDto).Assembly]);   // at startup
 * `[Sortable]`: which DTO properties clients may sort by, and the default order.
 * `SortableDto`: parses a sort string (`key[:asc|desc],...`, keys in any casing) against the
   DTO, accepting only its sortable properties; errors name what can be sorted by.
-  `ValidateAll` fails startup on a DTO without exactly one default.
+  `ValidateAll` fails startup on a DTO without exactly one default: every DTO in the assemblies
+  you pass (abstract bases skipped), or just the DTO types you pass.
 * `PagingParams`: page from 1 (default 1) and page size (default 100); missing or out-of-range
   values fall back to the defaults. `PagingParams.All` is one page with every item.
 * `SortingParams`: sort keys in order. `OrderBy(SortingParams)` sorts strings
   case-insensitively; with no keys, by `Id`.
 * `PagedData<T>`: the page's items and `PagingMetadata` (`TotalItems`, `CurrentPage`, `PerPage`,
-  `TotalPages`, `HasNextPage`).
+  `TotalPages`, `HasNextPage`). Every property is `required`, so an OpenAPI schema lists them all
+  as required, and both read back from JSON.
 
 ## Related packages
 

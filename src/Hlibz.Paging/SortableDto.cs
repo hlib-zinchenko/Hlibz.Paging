@@ -77,7 +77,9 @@ public sealed class SortableDto
     /// <summary>
     /// Checks every DTO in <paramref name="assemblies"/> with a <see cref="SortableAttribute"/>
     /// property, at startup, so a DTO without exactly one default stops the app instead of
-    /// failing the first request that sorts it.
+    /// failing the first request that sorts it. Abstract types are skipped: a base class may mark
+    /// properties sortable for the DTOs that inherit them. To check only the DTOs your lists
+    /// sort, pass them to <see cref="ValidateAll(IEnumerable{Type})"/> instead.
     /// </summary>
     /// <example>
     /// <code>
@@ -90,24 +92,28 @@ public sealed class SortableDto
     public static void ValidateAll(IEnumerable<Assembly> assemblies)
     {
         ArgumentNullException.ThrowIfNull(assemblies);
+        Validate(assemblies.SelectMany(assembly => assembly.GetTypes()).Where(IsSortable));
+    }
 
-        List<string> problems = [];
-        foreach (Type type in assemblies.SelectMany(assembly => assembly.GetTypes()).Where(IsSortable))
-        {
-            try
-            {
-                For(type);
-            }
-            catch (InvalidOperationException exception)
-            {
-                problems.Add(exception.Message);
-            }
-        }
-
-        if (problems.Count > 0)
-        {
-            throw new InvalidOperationException(string.Join(Environment.NewLine, problems));
-        }
+    /// <summary>
+    /// Checks each of <paramref name="dtoTypes"/>, at startup, so a DTO without exactly one
+    /// default stops the app instead of failing the first request that sorts it. Use it rather
+    /// than <see cref="ValidateAll(IEnumerable{Assembly})"/> when some types with
+    /// <see cref="SortableAttribute"/> properties are never sorted, such as a DTO that only
+    /// inherits them.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// SortableDto.ValidateAll([typeof(OrderDto), typeof(CustomerDto)]);
+    /// </code>
+    /// </example>
+    /// <param name="dtoTypes">The DTOs your lists sort.</param>
+    /// <exception cref="InvalidOperationException">One or more DTOs are invalid; the message names
+    /// each.</exception>
+    public static void ValidateAll(IEnumerable<Type> dtoTypes)
+    {
+        ArgumentNullException.ThrowIfNull(dtoTypes);
+        Validate(dtoTypes);
     }
 
     /// <summary>
@@ -181,8 +187,30 @@ public sealed class SortableDto
             SortingParam.Create(defaults[0].Property.Name, defaults[0].Attribute!.DefaultDirection));
     }
 
+    private static void Validate(IEnumerable<Type> dtoTypes)
+    {
+        List<string> problems = [];
+        foreach (Type type in dtoTypes)
+        {
+            try
+            {
+                For(type);
+            }
+            catch (InvalidOperationException exception)
+            {
+                problems.Add(exception.Message);
+            }
+        }
+
+        if (problems.Count > 0)
+        {
+            throw new InvalidOperationException(string.Join(Environment.NewLine, problems));
+        }
+    }
+
     private static bool IsSortable(Type type) =>
-        !type.ContainsGenericParameters
+        !type.IsAbstract
+        && !type.ContainsGenericParameters
         && type
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Any(property => property.IsDefined(typeof(SortableAttribute)));

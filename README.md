@@ -92,6 +92,14 @@ fails the app rather than the first request that sorts it:
 SortableDto.ValidateAll([typeof(OrderDto).Assembly]);
 ```
 
+Abstract types are skipped, so a base class can mark properties `[Sortable]` for the DTOs that
+inherit them. When some DTOs have `[Sortable]` properties but are never sorted (say, one that only
+inherits them), check just the ones your lists sort:
+
+```csharp
+SortableDto.ValidateAll([typeof(OrderDto), typeof(CustomerDto)]);
+```
+
 ## Sort strings
 
 Comma-separated keys, each a property optionally followed by `:asc` (the default) or `:desc`:
@@ -118,6 +126,10 @@ parameter (in OpenAPI, say).
 value falls back to page `1` and `100` items. `PagingParams.All` is one page with every item.
 `PagedData<T>` holds the page's items and its `PagingMetadata` (`TotalItems`, `CurrentPage`,
 `PerPage`, `TotalPages`, `HasNextPage`); `Map` converts the items and keeps the metadata.
+Every property of both is `required`, so a JSON schema of a page (the OpenAPI document
+Microsoft.AspNetCore.OpenApi serves, say) lists them all as required, and a client in .NET can
+read a page back with `JsonSerializer`. Build one with its constructor, which works out
+`TotalPages` and `HasNextPage`; the parameterless one is for serializers.
 
 `PaginateAsync` runs a `COUNT`, then loads the page with `OFFSET`/`LIMIT` (no second query when
 the count is `0`); `PagingParams.All` loads everything in one query.
