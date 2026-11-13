@@ -28,10 +28,6 @@ public sealed class SortableDto
         "Reads the public properties of each type given, which trimming may remove; "
         + "SortableDto.For<TDto>() keeps them.";
 
-    /// <summary>Why scanning assemblies isn't trimming-safe.</summary>
-    private const string ScanWarning =
-        "Scans every type of each assembly, which trimming may remove.";
-
     private static readonly ConcurrentDictionary<Type, SortableDto> Cache = new();
 
     private readonly string[] _properties;
@@ -100,19 +96,25 @@ public sealed class SortableDto
     /// properties sortable for the DTOs that inherit them. To check only the DTOs your lists
     /// sort, pass them to <see cref="ValidateAll(IEnumerable{Type})"/> instead.
     /// </summary>
+    /// <remarks>
+    /// The package's source generator lists each assembly's DTOs when it compiles (and reports an
+    /// invalid one as build error <c>HPAG001</c>), so nothing is scanned at runtime and this is
+    /// trimming-safe. An assembly that doesn't reference Hlibz.Paging has no DTOs to list. A DTO
+    /// the generated list can't name (a private nested type) is checked only by the analyzer.
+    /// </remarks>
     /// <example>
     /// <code>
     /// SortableDto.ValidateAll([typeof(OrderDto).Assembly]);
     /// </code>
     /// </example>
     /// <param name="assemblies">The assemblies with the DTOs.</param>
-    /// <exception cref="InvalidOperationException">One or more DTOs are invalid; the message names
-    /// each.</exception>
-    [RequiresUnreferencedCode(ScanWarning)]
+    /// <exception cref="InvalidOperationException">One or more DTOs are invalid, the message
+    /// naming each; or an assembly that references Hlibz.Paging wasn't compiled with its source
+    /// generator.</exception>
     public static void ValidateAll(IEnumerable<Assembly> assemblies)
     {
         ArgumentNullException.ThrowIfNull(assemblies);
-        Validate(assemblies.SelectMany(assembly => assembly.GetTypes()).Where(IsSortable));
+        Validate(assemblies.Distinct().SelectMany(Manifest));
     }
 
     /// <summary>
@@ -134,7 +136,7 @@ public sealed class SortableDto
     public static void ValidateAll(IEnumerable<Type> dtoTypes)
     {
         ArgumentNullException.ThrowIfNull(dtoTypes);
-        Validate(dtoTypes);
+        Validate(dtoTypes.Select(type => (Func<SortableDto>)(() => For(type))));
     }
 
     /// <summary>
@@ -208,15 +210,14 @@ public sealed class SortableDto
             SortingParam.Create(defaults[0].Property.Name, defaults[0].Attribute!.DefaultDirection));
     }
 
-    [RequiresUnreferencedCode(TypesWarning)]
-    private static void Validate(IEnumerable<Type> dtoTypes)
+    private static void Validate(IEnumerable<Func<SortableDto>> dtos)
     {
         List<string> problems = [];
-        foreach (Type type in dtoTypes)
+        foreach (Func<SortableDto> dto in dtos)
         {
             try
             {
-                For(type);
+                dto();
             }
             catch (InvalidOperationException exception)
             {
@@ -230,11 +231,29 @@ public sealed class SortableDto
         }
     }
 
-    [RequiresUnreferencedCode(ScanWarning)]
-    private static bool IsSortable(Type type) =>
-        !type.IsAbstract
-        && !type.ContainsGenericParameters
-        && type
-            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Any(property => property.IsDefined(typeof(SortableAttribute)));
+    /// <summary>
+    /// The DTOs the source generator listed in <paramref name="assembly"/>: none for an assembly
+    /// that doesn't reference Hlibz.Paging (or is Hlibz.Paging), which can't declare any.
+    /// </summary>
+    [UnconditionalSuppressMessage(
+        "Trimming",
+        "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code",
+        Justification = "Trimming removes only references nothing uses; an assembly that uses no Hlibz.Paging type declares no DTOs.")]
+    private static IReadOnlyList<Func<SortableDto>> Manifest(Assembly assembly)
+    {
+        if (assembly.GetCustomAttribute<SortableDtoManifestAttribute>() is { } manifest)
+        {
+            return manifest.Dtos;
+        }
+
+        Assembly paging = typeof(SortableDto).Assembly;
+        bool referencesPaging = assembly.GetReferencedAssemblies().Any(name =>
+            AssemblyName.ReferenceMatchesDefinition(name, paging.GetName()));
+        return assembly == paging || !referencesPaging
+            ? []
+            : throw new InvalidOperationException(
+                $"{assembly.GetName().Name} has no list of sortable DTOs: the Hlibz.Paging source "
+                + "generator didn't run when it was compiled. Reference the Hlibz.Paging package "
+                + "from that project, and don't exclude its analyzers.");
+    }
 }

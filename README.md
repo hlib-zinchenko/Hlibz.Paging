@@ -85,12 +85,19 @@ app.MapGet("/orders", async (
 
 (property names follow your JSON naming policy).
 
-Check every DTO with a `[Sortable]` property at startup, so a DTO without exactly one default
-fails the app rather than the first request that sorts it:
+A DTO without exactly one default is a build error, [`HPAG001`](#build-errors): the package's
+analyzer checks every DTO with a `[Sortable]` property as it compiles. To check again at startup
+(where the error is suppressed, say), so such a DTO fails the app rather than the first request
+that sorts it:
 
 ```csharp
 SortableDto.ValidateAll([typeof(OrderDto).Assembly]);
 ```
+
+Nothing is scanned at runtime: the package's source generator lists each assembly's sortable
+DTOs as it compiles, and `ValidateAll` reads that list, so it's trimming-safe. An assembly that
+references Hlibz.Paging but was compiled without the generator makes it throw; one that doesn't
+reference Hlibz.Paging has no DTOs to check.
 
 Abstract types are skipped, so a base class can mark properties `[Sortable]` for the DTOs that
 inherit them. When some DTOs have `[Sortable]` properties but are never sorted (say, one that only
@@ -188,6 +195,16 @@ the type has one and no key names it, so rows with equal keys keep one order and
 repeat nor skip them. A key that names no property of the
 sorted type throws `SortingParamNotFoundException`: keys from `SortableDto` name the DTO's
 properties, so sort the projected DTO, not the entity, when their names differ.
+
+## Build errors
+
+The package's analyzer reports these as you build:
+
+| Id | Meaning |
+|---|---|
+| `HPAG001` | A DTO's `[Sortable]` properties don't include exactly one with `IsDefault = true`. A request that names no sort key is sorted by that property, so mark one (on the DTO or a base class it inherits from). |
+
+A type deliberately left like that can suppress it with `#pragma warning disable HPAG001`.
 
 ## Limitations
 

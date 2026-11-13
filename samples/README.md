@@ -23,7 +23,10 @@ dotnet run --project samples/Orders.Api    # http://localhost:5390
 | `GET /customers?per_page=3&sort=country,name` | The same paging and sorting on a list in memory, no database. Strings sort case-insensitively: "anna schmidt" comes before "Bruno Costa". | `Paginate` in `Program.cs`, `CustomerDirectory` in `Dtos.cs` |
 | `GET /customers?page=0&per_page=-5` | Out-of-range values fall back to page 1 and 100 per page. | `new PagingParams(page, perPage)` |
 
-At startup, `SortableDto.ValidateAll` checks every DTO with a `[Sortable]` property in the app's
-assembly, so a DTO without exactly one default stops the app before any request.
+A DTO without exactly one default doesn't build (`HPAG001`). At startup,
+`SortableDto.ValidateAll` checks again every DTO with a `[Sortable]` property in the app's
+assembly, reading the list the source generator wrote, so such a DTO stops the app before any
+request even where the build error is suppressed. The sample references the generator project as
+an analyzer, which the package brings in your own app.
 
 The sample targets net11.0 only, references the library projects and is never packed.

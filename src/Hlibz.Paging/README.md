@@ -44,8 +44,9 @@ SortableDto.ValidateAll([typeof(OrderDto).Assembly]);   // at startup
 * `[Sortable]`: which DTO properties clients may sort by, and the default order.
 * `SortableDto`: parses a sort string (`key[:asc|desc],...`, keys in any casing) against the
   DTO, accepting only its sortable properties; errors name what can be sorted by.
-  `ValidateAll` fails startup on a DTO without exactly one default: every DTO in the assemblies
-  you pass (abstract bases skipped), or just the DTO types you pass.
+  A DTO without exactly one default is build error `HPAG001`; `ValidateAll` checks again at
+  startup: every DTO in the assemblies you pass (listed by the package's source generator, no
+  scanning; abstract bases skipped), or just the DTO types you pass.
 * `PagingParams`: page from 1 (default 1) and page size (default 100); missing or out-of-range
   values fall back to the defaults. `PagingParams.All` is one page with every item.
 * `SortingParams`: sort keys in order. `OrderBy(SortingParams)` sorts strings

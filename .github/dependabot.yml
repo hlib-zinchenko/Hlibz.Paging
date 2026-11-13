@@ -13,6 +13,8 @@ updates:
     ignore:
       - dependency-name: Microsoft.EntityFrameworkCore*
         update-types: ["version-update:semver-major"]
+      # The Roslyn the generator compiles against is a deliberately low minimum, never bumped.
+      - dependency-name: Microsoft.CodeAnalysis.CSharp
     groups:
       nuget:
         patterns: ["*"]

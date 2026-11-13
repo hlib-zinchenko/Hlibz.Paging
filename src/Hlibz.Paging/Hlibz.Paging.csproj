@@ -10,6 +10,24 @@
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
+  <!--
+      The [Sortable] analyzer and source generator ship inside this package (analyzers/dotnet/cs),
+      plus a buildTransitive target that adds them to a project referencing the package
+      indirectly if the SDK hasn't. Built first, never a dependency of its own.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Hlibz.Paging.Generators\Hlibz.Paging.Generators.csproj"
+                      ReferenceOutputAssembly="false"
+                      PrivateAssets="all" />
+    <None Include="..\Hlibz.Paging.Generators\bin\$(Configuration)\netstandard2.0\Hlibz.Paging.Generators.dll"
+          Pack="true"
+          PackagePath="analyzers/dotnet/cs"
+          Visible="false" />
+    <None Include="buildTransitive\Hlibz.Paging.targets"
+          Pack="true"
+          PackagePath="buildTransitive" />
+  </ItemGroup>
+
   <ItemGroup>
     <InternalsVisibleTo Include="Hlibz.Paging.Tests" />
   </ItemGroup>

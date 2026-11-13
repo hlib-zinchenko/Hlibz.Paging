@@ -18,6 +18,8 @@ public sealed class OrderDto
     public string? Note { get; init; }
 }
 
+// Invalid on purpose, for the runtime check: the analyzer would otherwise stop the build.
+#pragma warning disable HPAG001
 public sealed class NoDefaultDto
 {
     [Sortable]
@@ -32,6 +34,8 @@ public sealed class TwoDefaultsDto
     [Sortable(IsDefault = true)]
     public string Name { get; init; } = string.Empty;
 }
+
+#pragma warning restore HPAG001
 
 public sealed class OpenRow<T>
 {

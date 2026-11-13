@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+      The analyzer and source generator for [Sortable] DTOs: reports a DTO without exactly one
+      default as a build error, and lists every sortable DTO of the assembly it runs on as a
+      SortableDtoManifestAttribute, which SortableDto.ValidateAll reads instead of scanning types.
+      Not a package of its own: Hlibz.Paging ships it under analyzers/dotnet/cs.
+      netstandard2.0 and Roslyn 4.8, a low minimum, so every SDK that builds net10.0 loads it.
+  -->
+  <PropertyGroup>
+    <TargetFrameworks></TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
+    <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+  </ItemGroup>
+
+</Project>

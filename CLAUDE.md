@@ -19,13 +19,24 @@ Two NuGet packages released together from one tag, extracted from Lighthouse's p
   `InvalidOperationException`), `TryParse` of a client's sort string (`Internal/SortStringParser`:
   `key[:asc|desc],...`; parsed keys name properties as declared; errors name the allowed
   properties through an optional `JsonNamingPolicy`), and `ValidateAll(assemblies)`, which checks
-  every closed, non-abstract type with a `[Sortable]` property, or `ValidateAll(types)`, which
+  every closed, non-abstract type with a `[Sortable]` property as listed by the generated
+  `SortableDtoManifestAttribute` (no scan; an assembly referencing Hlibz.Paging without one
+  throws), or `ValidateAll(types)`, which
   checks the types given; either throws one exception naming every bad DTO.
   Keys match properties in any casing (`Internal/PropertyLookup`: `_` and `-` ignored,
   case-insensitive); no keys = sort by `Id`, and `Id` (when the type has one and no key names it)
   breaks ties, so pages over a non-unique key are stable; in memory (`EnumerableQuery`) a
   string key is null-safe, a database query keeps plain `UPPER(column)`; a key naming no property throws
   `SortingParamNotFoundException` naming every bad key. No dependencies.
+- `src/Hlibz.Paging.Generators` (netstandard2.0, Roslyn 4.8, packed inside Hlibz.Paging under
+  `analyzers/dotnet/cs` with `buildTransitive/Hlibz.Paging.targets`): `SortableDtoAnalyzer`
+  reports `HPAG001` (not exactly one default, the runtime check as a build error) and
+  `SortableDtoManifestGenerator` writes each assembly's DTO list, invalid ones included.
+  `SortableDtoSymbols` reads `[Sortable]` the way `SortableDto` does (inherited, overrides).
+  Tests and the sample reference it as an analyzer; the test DTOs that are invalid on purpose
+  suppress `HPAG001`. CI's `.github/scripts/check-packed-generator.sh` builds an indirect
+  consumer from the packed nupkg. Rules are tracked in `AnalyzerReleases.*.md` and the README's
+  "Build errors".
 - `src/Hlibz.Paging.EntityFrameworkCore`: `PaginateAsync` (count, then the page; `All` in one
   query). EF Core is referenced per target framework (10/11, see `Directory.Packages.props`).
 - `samples/Orders.Api`: a plain minimal API on EF Core SQLite in memory (one connection kept

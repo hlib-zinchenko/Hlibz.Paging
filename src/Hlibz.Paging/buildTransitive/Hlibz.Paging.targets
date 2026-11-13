@@ -1,0 +1,20 @@
+<Project>
+  <!--
+      SortableDto.ValidateAll reads the list of sortable DTOs the package's source generator
+      writes into every assembly that references Hlibz.Paging, so each of them must compile with
+      the generator, including a project that gets this package indirectly (through a project
+      reference, or through Hlibz.Paging.EntityFrameworkCore). The .NET 10 and 11 SDKs already
+      hand it to such projects, even though pack declares package dependencies with
+      exclude="Analyzers". This is the guard for a build that doesn't: it adds the generator only
+      when it's missing, once.
+  -->
+  <Target Name="_HlibzPagingAddGenerator"
+          AfterTargets="ResolvePackageDependenciesForBuild;ResolveNuGetPackageAssets">
+    <ItemGroup>
+      <_HlibzPagingGenerator Include="@(Analyzer)"
+                             Condition="'%(Filename)' == 'Hlibz.Paging.Generators'" />
+      <Analyzer Include="$(MSBuildThisFileDirectory)../analyzers/dotnet/cs/Hlibz.Paging.Generators.dll"
+                Condition="'@(_HlibzPagingGenerator)' == ''" />
+    </ItemGroup>
+  </Target>
+</Project>
