@@ -6,6 +6,10 @@
     <PackageTags>paging;pagination;sorting;linq;dto;query-string;api</PackageTags>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
   <ItemGroup>
     <InternalsVisibleTo Include="Hlibz.Paging.Tests" />
   </ItemGroup>

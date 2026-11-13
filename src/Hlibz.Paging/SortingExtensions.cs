@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -13,6 +14,14 @@ namespace Hlibz.Paging;
 /// </summary>
 public static class SortingExtensions
 {
+    /// <summary>
+    /// Why sorting a query isn't trimming- or AOT-safe, as a warning on the caller: the same as
+    /// any LINQ provider query built at runtime.
+    /// </summary>
+    internal const string QuerySortWarning =
+        "Sorting a query builds Queryable.OrderBy/ThenBy expressions for the sort keys' property "
+        + "types at runtime, as any LINQ provider query does. To sort in memory, use Paginate.";
+
     private static readonly MethodInfo ToUpper = typeof(string).GetMethod(
         nameof(string.ToUpper),
         Type.EmptyTypes)!;
@@ -30,7 +39,12 @@ public static class SortingExtensions
     /// <exception cref="SortingParamNotFoundException">
     /// A sort key (or, with none, <c>Id</c>) names no public property of <typeparamref name="T"/>.
     /// </exception>
-    public static IOrderedQueryable<T> OrderBy<T>(this IQueryable<T> source, SortingParams sortingParams)
+    [RequiresUnreferencedCode(QuerySortWarning)]
+    [RequiresDynamicCode(QuerySortWarning)]
+    public static IOrderedQueryable<T> OrderBy<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] T>(
+        this IQueryable<T> source,
+        SortingParams sortingParams)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(sortingParams);
@@ -65,7 +79,7 @@ public static class SortingExtensions
     /// <param name="sortingParams">The sorting.</param>
     /// <param name="pagingParams">The page to return.</param>
     /// <returns>The page.</returns>
-    public static PagedData<T> Paginate<T>(
+    public static PagedData<T> Paginate<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] T>(
         this IEnumerable<T> source,
         SortingParams sortingParams,
         PagingParams pagingParams)

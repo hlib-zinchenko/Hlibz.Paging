@@ -6,6 +6,10 @@
     <PackageTags>paging;pagination;sorting;entity-framework-core;efcore;linq</PackageTags>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
   </ItemGroup>

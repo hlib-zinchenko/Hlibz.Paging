@@ -195,6 +195,11 @@ properties, so sort the projected DTO, not the entity, when their names differ.
 * No maximum page size: `new PagingParams(1, int.MaxValue)` is `PagingParams.All`. Cap the
   client's value before building `PagingParams` if that matters.
 * Offset paging (`OFFSET`/`LIMIT`), not keyset paging.
+* Trimming and Native AOT: both packages are marked AOT-compatible. `Paginate`,
+  `SortableDto.For<TDto>()` and `TryParse` are safe. Sorting a query (`OrderBy` on an
+  `IQueryable`, `PaginateAsync`) builds LINQ expressions at runtime, as any LINQ provider query
+  does, so it carries `[RequiresDynamicCode]`/`[RequiresUnreferencedCode]` warnings, like
+  EF Core's own query APIs.
 
 ## Samples
 

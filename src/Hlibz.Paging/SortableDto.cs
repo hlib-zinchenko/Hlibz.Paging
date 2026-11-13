@@ -23,6 +23,15 @@ namespace Hlibz.Paging;
 /// </example>
 public sealed class SortableDto
 {
+    /// <summary>Why checking types given at runtime isn't trimming-safe.</summary>
+    private const string TypesWarning =
+        "Reads the public properties of each type given, which trimming may remove; "
+        + "SortableDto.For<TDto>() keeps them.";
+
+    /// <summary>Why scanning assemblies isn't trimming-safe.</summary>
+    private const string ScanWarning =
+        "Scans every type of each assembly, which trimming may remove.";
+
     private static readonly ConcurrentDictionary<Type, SortableDto> Cache = new();
 
     private readonly string[] _properties;
@@ -67,7 +76,7 @@ public sealed class SortableDto
     /// <returns>Its sortable properties and default order.</returns>
     /// <exception cref="InvalidOperationException">Not exactly one of its sortable properties is
     /// the default.</exception>
-    public static SortableDto For<TDto>() => For(typeof(TDto));
+    public static SortableDto For<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TDto>() => For(typeof(TDto));
 
     /// <summary>
     /// What <paramref name="dtoType"/> lets clients sort by.
@@ -76,7 +85,7 @@ public sealed class SortableDto
     /// <returns>Its sortable properties and default order.</returns>
     /// <exception cref="InvalidOperationException">Not exactly one of its sortable properties is
     /// the default.</exception>
-    public static SortableDto For(Type dtoType)
+    public static SortableDto For([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] Type dtoType)
     {
         ArgumentNullException.ThrowIfNull(dtoType);
         return Cache.TryGetValue(dtoType, out SortableDto? cached)
@@ -99,6 +108,7 @@ public sealed class SortableDto
     /// <param name="assemblies">The assemblies with the DTOs.</param>
     /// <exception cref="InvalidOperationException">One or more DTOs are invalid; the message names
     /// each.</exception>
+    [RequiresUnreferencedCode(ScanWarning)]
     public static void ValidateAll(IEnumerable<Assembly> assemblies)
     {
         ArgumentNullException.ThrowIfNull(assemblies);
@@ -120,6 +130,7 @@ public sealed class SortableDto
     /// <param name="dtoTypes">The DTOs your lists sort.</param>
     /// <exception cref="InvalidOperationException">One or more DTOs are invalid; the message names
     /// each.</exception>
+    [RequiresUnreferencedCode(TypesWarning)]
     public static void ValidateAll(IEnumerable<Type> dtoTypes)
     {
         ArgumentNullException.ThrowIfNull(dtoTypes);
@@ -174,7 +185,7 @@ public sealed class SortableDto
             out error);
     }
 
-    private static SortableDto Build(Type dtoType)
+    private static SortableDto Build([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] Type dtoType)
     {
         (PropertyInfo Property, SortableAttribute? Attribute)[] properties =
         [
@@ -197,6 +208,7 @@ public sealed class SortableDto
             SortingParam.Create(defaults[0].Property.Name, defaults[0].Attribute!.DefaultDirection));
     }
 
+    [RequiresUnreferencedCode(TypesWarning)]
     private static void Validate(IEnumerable<Type> dtoTypes)
     {
         List<string> problems = [];
@@ -218,6 +230,7 @@ public sealed class SortableDto
         }
     }
 
+    [RequiresUnreferencedCode(ScanWarning)]
     private static bool IsSortable(Type type) =>
         !type.IsAbstract
         && !type.ContainsGenericParameters

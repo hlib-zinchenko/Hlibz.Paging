@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace Hlibz.Paging.EntityFrameworkCore;
@@ -7,6 +9,14 @@ namespace Hlibz.Paging.EntityFrameworkCore;
 /// </summary>
 public static class QueryableExtensions
 {
+    /// <summary>
+    /// Why paging a query isn't trimming- or AOT-safe, as a warning on the caller: it sorts the
+    /// query with <c>SortingExtensions.OrderBy</c>.
+    /// </summary>
+    private const string QuerySortWarning =
+        "Sorting a query builds Queryable.OrderBy/ThenBy expressions for the sort keys' property "
+        + "types at runtime, as any LINQ provider query does.";
+
     /// <summary>
     /// Sorts the query by <paramref name="sortingParams"/> and loads one page: a <c>COUNT</c>,
     /// then the page with <c>OFFSET</c>/<c>LIMIT</c> (skipped when the count is <c>0</c>). For
@@ -29,7 +39,10 @@ public static class QueryableExtensions
     /// <exception cref="SortingParamNotFoundException">
     /// A sort key names no property of <typeparamref name="TSource"/>.
     /// </exception>
-    public static async Task<PagedData<TSource>> PaginateAsync<TSource>(
+    [RequiresUnreferencedCode(QuerySortWarning)]
+    [RequiresDynamicCode(QuerySortWarning)]
+    public static async Task<PagedData<TSource>> PaginateAsync<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TSource>(
         this IQueryable<TSource> source,
         SortingParams sortingParams,
         PagingParams pagingParams,
