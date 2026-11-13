@@ -16,14 +16,15 @@ internal static partial class SortStringParser
     /// <param name="sort">The sort string, not empty.</param>
     /// <param name="findProperty">The declared name of the sortable property a key names, or
     /// <see langword="null"/>.</param>
-    /// <param name="allowed">The sortable properties as the client sees them, for errors.</param>
+    /// <param name="allowed">The sortable properties as the client sees them, for errors; only
+    /// asked for when the sort string names an unknown property.</param>
     /// <param name="sortingParams">The sorting, keys naming properties as declared.</param>
     /// <param name="error">Why <paramref name="sort"/> was rejected, for the client.</param>
     /// <returns>Whether <paramref name="sort"/> is valid.</returns>
     public static bool TryParse(
         string sort,
         Func<string, string?> findProperty,
-        IReadOnlyList<string> allowed,
+        Func<IReadOnlyList<string>> allowed,
         [NotNullWhen(true)] out SortingParams? sortingParams,
         [NotNullWhen(false)] out string? error)
     {
@@ -56,7 +57,7 @@ internal static partial class SortStringParser
 
         if (unsupported.Count > 0)
         {
-            error = $"Can't sort by {string.Join(", ", unsupported)}. Sort by: {string.Join(", ", allowed)}.";
+            error = $"Can't sort by {string.Join(", ", unsupported)}. Sort by: {string.Join(", ", allowed())}.";
             return false;
         }
 

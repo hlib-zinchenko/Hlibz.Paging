@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+
 namespace Hlibz.Paging;
 
 /// <summary>
@@ -12,14 +14,18 @@ public sealed class SortingParams
 {
     private readonly List<SortingParam> _sortingParams = [];
 
+    /// <summary>A read-only view of <see cref="_sortingParams"/>, which follows its changes.</summary>
+    private readonly ReadOnlyCollection<SortingParam> _readOnlyParams;
+
     private SortingParams()
     {
+        _readOnlyParams = _sortingParams.AsReadOnly();
     }
 
     /// <summary>
     /// Gets the sort keys, in order.
     /// </summary>
-    public IReadOnlyList<SortingParam> Params => _sortingParams.AsReadOnly();
+    public IReadOnlyList<SortingParam> Params => _readOnlyParams;
 
     /// <summary>
     /// Starts with no sort keys. With none added, <c>OrderBy</c> sorts by an <c>Id</c> property.

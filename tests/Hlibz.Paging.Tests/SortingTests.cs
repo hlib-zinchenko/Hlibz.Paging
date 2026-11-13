@@ -124,6 +124,47 @@ public sealed class SortingTests
         Assert.Equal(1, page.PagingMetadata.TotalPages);
     }
 
+    [Fact]
+    public void Paginate_WithNullAndMixedCaseStrings_SortsLikeTheQuerySort()
+    {
+        Person[] people = [new(1, "bob"), new(2, null), new(3, "Alice"), new(4, "alice"), new(5, "Bob")];
+        SortingParams sorting = SortingParams.Create().Ascending("name");
+
+        PagedData<Person> page = people.Paginate(sorting, PagingParams.All);
+
+        Assert.Equal([2, 3, 4, 1, 5], page.Data.Select(person => person.Id));
+        Assert.Equal(
+            people.AsQueryable().OrderBy(sorting).Select(person => person.Id),
+            page.Data.Select(person => person.Id));
+    }
+
+    [Fact]
+    public void Paginate_WithDescendingKeys_SortsNullLastAndBreaksTiesById()
+    {
+        Person[] people = [new(3, "same"), new(1, null), new(2, "same"), new(4, "other")];
+
+        PagedData<Person> page = people.Paginate(SortingParams.Create().Descending("name"), PagingParams.All);
+
+        Assert.Equal([2, 3, 4, 1], page.Data.Select(person => person.Id));
+    }
+
+    [Fact]
+    public void Paginate_WithSeveralKeys_MatchesTheQuerySort()
+    {
+        SortingParams sorting = SortingParams.Create().Ascending("rank").Descending("created_at");
+
+        PagedData<Item> page = Items.Paginate(sorting, PagingParams.All);
+
+        Assert.Equal(Sort(sorting), page.Data.Select(item => item.Id));
+    }
+
+    [Fact]
+    public void Paginate_WithUnknownProperty_Throws()
+    {
+        Assert.Throws<SortingParamNotFoundException>(
+            () => Items.Paginate(SortingParams.Create().Ascending("price"), PagingParams.All));
+    }
+
     private static int[] Sort(SortingParams sorting) =>
         [.. Items.AsQueryable().OrderBy(sorting).Select(item => item.Id)];
 

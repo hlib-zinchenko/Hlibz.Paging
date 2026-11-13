@@ -13,7 +13,8 @@ Two NuGet packages released together from one tag, extracted from Lighthouse's p
   `PagedData<T>` + `PagingMetadata` (every property `required` + `init`, so OpenAPI schemas
   list them as required and System.Text.Json reads them back; a parameterless constructor for
   serializers and a `[SetsRequiredMembers]` one that works out `TotalPages`/`HasNextPage`), `SortingExtensions` (`OrderBy(SortingParams)` builds the
-  `OrderBy`/`ThenBy` expression, strings via `ToUpper()`; in-memory `Paginate`), and
+  `OrderBy`/`ThenBy` expression, strings via `ToUpper()`; in-memory `Paginate`, which sorts the
+  same plan (`Internal/SortPlan`) with delegates rather than compiling an expression), and
   `SortableDto`: a DTO's `[Sortable]` properties (cached per type, exactly one `IsDefault` or
   `InvalidOperationException`), `TryParse` of a client's sort string (`Internal/SortStringParser`:
   `key[:asc|desc],...`; parsed keys name properties as declared; errors name the allowed

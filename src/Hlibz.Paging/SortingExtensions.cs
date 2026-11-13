@@ -13,8 +13,6 @@ namespace Hlibz.Paging;
 /// </summary>
 public static class SortingExtensions
 {
-    private const string IdProperty = "Id";
-
     private static readonly MethodInfo ToUpper = typeof(string).GetMethod(
         nameof(string.ToUpper),
         Type.EmptyTypes)!;
@@ -37,18 +35,7 @@ public static class SortingExtensions
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(sortingParams);
 
-        IReadOnlyList<SortingParam> keys = sortingParams.Params.Count > 0
-            ? sortingParams.Params
-            : [SortingParam.Ascending(IdProperty)];
-        List<(PropertyInfo Property, ListSortDirection Direction)> sortBy =
-        [
-            .. keys.Select((key, index) => (PropertyLookup.Find(typeof(T), keys, index), key.SortDirection)),
-        ];
-        if (PropertyLookup.FindOrDefault(typeof(T), IdProperty) is { } id
-            && !sortBy.Exists(pair => pair.Property == id))
-        {
-            sortBy.Add((id, ListSortDirection.Ascending));
-        }
+        List<(PropertyInfo Property, ListSortDirection Direction)> sortBy = SortPlan.For<T>(sortingParams);
 
         // In memory a string property's null would throw on ToUpper(); a database query keeps
         // plain UPPER(column), where null stays null.
@@ -84,9 +71,12 @@ public static class SortingExtensions
         PagingParams pagingParams)
     {
         ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(sortingParams);
         ArgumentNullException.ThrowIfNull(pagingParams);
 
-        T[] sorted = [.. source.AsQueryable().OrderBy(sortingParams)];
+        // Sorted with delegates rather than through AsQueryable(), which would compile the sort
+        // expression on every call.
+        T[] sorted = [.. SortPlan.Sort(source, SortPlan.For<T>(sortingParams))];
         T[] page = pagingParams.IsAll
             ? sorted
             : [.. sorted.Skip(pagingParams.Skip).Take(pagingParams.PerPage)];

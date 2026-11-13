@@ -27,11 +27,21 @@ public sealed class SortableDto
 
     private readonly string[] _properties;
 
+    /// <summary>
+    /// The declared names by normalized name (<see cref="PropertyLookup.Normalize"/>), any case;
+    /// the first of two that normalize alike wins.
+    /// </summary>
+    private readonly Dictionary<string, string> _byNormalizedName = new(StringComparer.OrdinalIgnoreCase);
+
     private SortableDto(Type dtoType, string[] properties, SortingParam defaultSorting)
     {
         DtoType = dtoType;
         _properties = properties;
         DefaultSorting = defaultSorting;
+        foreach (string property in properties)
+        {
+            _byNormalizedName.TryAdd(PropertyLookup.Normalize(property), property);
+        }
     }
 
     /// <summary>
@@ -158,8 +168,8 @@ public sealed class SortableDto
 
         return SortStringParser.TryParse(
             sort,
-            sortBy => Array.Find(_properties, property => PropertyLookup.Matches(sortBy, property)),
-            [.. _properties.Select(property => namingPolicy?.ConvertName(property) ?? property)],
+            sortBy => _byNormalizedName.GetValueOrDefault(PropertyLookup.Normalize(sortBy)),
+            () => [.. _properties.Select(property => namingPolicy?.ConvertName(property) ?? property)],
             out sortingParams,
             out error);
     }
