@@ -58,6 +58,16 @@ public sealed class PaginateAsyncTests : IAsyncLifetime
     }
 
     [Fact]
+    public void OrderBy_InTheDatabase_SortsUpperCaseThenById()
+    {
+        string sql = _db.Orders.OrderBy(SortingParams.Create().Ascending("customer_name")).ToQueryString();
+
+        // Plain UPPER(column), no in-memory null guard, then Id so equal names keep one order.
+        Assert.Contains("ORDER BY upper(\"o\".\"CustomerName\"), \"o\".\"Id\"", sql, StringComparison.Ordinal);
+        Assert.DoesNotContain("CASE", sql, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task PaginateAsync_WithNoMatches_ReturnsEmptyPage()
     {
         PagedData<Order> page = await _db.Orders

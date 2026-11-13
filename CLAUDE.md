@@ -21,7 +21,9 @@ Two NuGet packages released together from one tag, extracted from Lighthouse's p
   every closed, non-abstract type with a `[Sortable]` property, or `ValidateAll(types)`, which
   checks the types given; either throws one exception naming every bad DTO.
   Keys match properties in any casing (`Internal/PropertyLookup`: `_` and `-` ignored,
-  case-insensitive); no keys = sort by `Id`; a key naming no property throws
+  case-insensitive); no keys = sort by `Id`, and `Id` (when the type has one and no key names it)
+  breaks ties, so pages over a non-unique key are stable; in memory (`EnumerableQuery`) a
+  string key is null-safe, a database query keeps plain `UPPER(column)`; a key naming no property throws
   `SortingParamNotFoundException` naming every bad key. No dependencies.
 - `src/Hlibz.Paging.EntityFrameworkCore`: `PaginateAsync` (count, then the page; `All` in one
   query). EF Core is referenced per target framework (10/11, see `Directory.Packages.props`).

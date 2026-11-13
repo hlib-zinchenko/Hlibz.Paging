@@ -46,6 +46,35 @@ public sealed class SortingTests
     }
 
     [Fact]
+    public void OrderBy_WithEqualKeys_BreaksTiesById()
+    {
+        Item[] sameName = [Items[0] with { Name = "same" }, Items[1] with { Name = "same" }, Items[3] with { Name = "same" }];
+
+        int[] ids = [.. sameName.AsQueryable().OrderBy(SortingParams.Create().Ascending("name")).Select(item => item.Id)];
+
+        Assert.Equal([1, 2, 3], ids);
+    }
+
+    [Fact]
+    public void OrderBy_WithIdKey_DoesNotSortByIdTwice()
+    {
+        IQueryable<Item> sorted = Items.AsQueryable().OrderBy(SortingParams.Create().Descending("id"));
+
+        Assert.Equal([5, 4, 3, 2, 1], sorted.Select(item => item.Id));
+        Assert.DoesNotContain("ThenBy", sorted.Expression.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void OrderBy_InMemoryWithNullString_SortsItFirst()
+    {
+        Person[] people = [new(1, "bob"), new(2, null), new(3, "Alice")];
+
+        int[] ids = [.. people.AsQueryable().OrderBy(SortingParams.Create().Ascending("name")).Select(person => person.Id)];
+
+        Assert.Equal([2, 3, 1], ids);
+    }
+
+    [Fact]
     public void OrderBy_WithUnknownProperties_NamesThemAll()
     {
         SortingParamNotFoundException exception = Assert.Throws<SortingParamNotFoundException>(
@@ -99,4 +128,6 @@ public sealed class SortingTests
         [.. Items.AsQueryable().OrderBy(sorting).Select(item => item.Id)];
 
     public sealed record Item(int Id, string Name, int Rank, DateTime CreatedAt);
+
+    public sealed record Person(int Id, string? Name);
 }

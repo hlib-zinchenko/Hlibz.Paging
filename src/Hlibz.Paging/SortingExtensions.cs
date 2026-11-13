@@ -13,13 +13,17 @@ namespace Hlibz.Paging;
 /// </summary>
 public static class SortingExtensions
 {
+    private const string IdProperty = "Id";
+
     private static readonly MethodInfo ToUpper = typeof(string).GetMethod(
         nameof(string.ToUpper),
         Type.EmptyTypes)!;
 
     /// <summary>
     /// Sorts by each sort key in turn (<c>OrderBy</c>, then <c>ThenBy</c>), strings
-    /// case-insensitively. With no sort keys, sorts by the <c>Id</c> property.
+    /// case-insensitively, then by the <c>Id</c> property when <typeparamref name="T"/> has one
+    /// and no key names it, so items with equal keys keep one order and pages neither repeat nor
+    /// skip them. With no sort keys, sorts by <c>Id</c>.
     /// </summary>
     /// <typeparam name="T">The item type the sort keys name properties of.</typeparam>
     /// <param name="source">The query.</param>
@@ -35,21 +39,28 @@ public static class SortingExtensions
 
         IReadOnlyList<SortingParam> keys = sortingParams.Params.Count > 0
             ? sortingParams.Params
-            : [SortingParam.Ascending("Id")];
-        Expression query = source.Expression;
-        for (int index = 0; index < keys.Count; index++)
+            : [SortingParam.Ascending(IdProperty)];
+        List<(PropertyInfo Property, ListSortDirection Direction)> sortBy =
+        [
+            .. keys.Select((key, index) => (PropertyLookup.Find(typeof(T), keys, index), key.SortDirection)),
+        ];
+        if (PropertyLookup.FindOrDefault(typeof(T), IdProperty) is { } id
+            && !sortBy.Exists(pair => pair.Property == id))
         {
-            PropertyInfo property = PropertyLookup.Find(typeof(T), keys, index);
-            ParameterExpression item = Expression.Parameter(typeof(T), "item");
-            Expression key = Expression.Property(item, property);
-            if (property.PropertyType == typeof(string))
-            {
-                key = Expression.Call(key, ToUpper);
-            }
+            sortBy.Add((id, ListSortDirection.Ascending));
+        }
 
+        // In memory a string property's null would throw on ToUpper(); a database query keeps
+        // plain UPPER(column), where null stays null.
+        bool inMemory = source.Provider is EnumerableQuery;
+        Expression query = source.Expression;
+        for (int index = 0; index < sortBy.Count; index++)
+        {
+            ParameterExpression item = Expression.Parameter(typeof(T), "item");
+            Expression key = SortKey(Expression.Property(item, sortBy[index].Property), inMemory);
             query = Expression.Call(
                 typeof(Queryable),
-                MethodName(index == 0, keys[index].SortDirection),
+                MethodName(index == 0, sortBy[index].Direction),
                 [typeof(T), key.Type],
                 query,
                 Expression.Quote(Expression.Lambda(key, item)));
@@ -80,6 +91,23 @@ public static class SortingExtensions
             ? sorted
             : [.. sorted.Skip(pagingParams.Skip).Take(pagingParams.PerPage)];
         return new PagedData<T>(page, sorted.Length, pagingParams);
+    }
+
+    private static Expression SortKey(MemberExpression property, bool inMemory)
+    {
+        if (property.Type != typeof(string))
+        {
+            return property;
+        }
+
+        Expression upper = Expression.Call(property, ToUpper);
+        if (!inMemory)
+        {
+            return upper;
+        }
+
+        ConstantExpression none = Expression.Constant(null, typeof(string));
+        return Expression.Condition(Expression.Equal(property, none), none, upper);
     }
 
     private static string MethodName(bool first, ListSortDirection direction) =>

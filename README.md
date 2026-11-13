@@ -115,7 +115,7 @@ Comma-separated keys, each a property optionally followed by `:asc` (the default
   ```text
   Can't sort by total. Sort by: id, customer_name, created_at.
   ```
-* Strings sort case-insensitively (`ToUpper()` in the query).
+* Strings sort case-insensitively (`ToUpper()` in the query; in memory a `null` sorts first).
 
 `SortableDto.For<TDto>()` also exposes `Properties` and `DefaultSorting`, for documenting the
 parameter (in OpenAPI, say).
@@ -183,7 +183,9 @@ PagedData<OrderDto> page = orderDtos.Paginate(sorting, new PagingParams(1, 50));
 PagedData<OrderRow> rows = page.Map(OrderRow.From);   // same paging metadata
 ```
 
-With no sort keys, `OrderBy` sorts by an `Id` property. A key that names no property of the
+With no sort keys, `OrderBy` sorts by an `Id` property. With keys, it then sorts by `Id` when
+the type has one and no key names it, so rows with equal keys keep one order and pages neither
+repeat nor skip them. A key that names no property of the
 sorted type throws `SortingParamNotFoundException`: keys from `SortableDto` name the DTO's
 properties, so sort the projected DTO, not the entity, when their names differ.
 

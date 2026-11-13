@@ -49,7 +49,7 @@ SortableDto.ValidateAll([typeof(OrderDto).Assembly]);   // at startup
 * `PagingParams`: page from 1 (default 1) and page size (default 100); missing or out-of-range
   values fall back to the defaults. `PagingParams.All` is one page with every item.
 * `SortingParams`: sort keys in order. `OrderBy(SortingParams)` sorts strings
-  case-insensitively; with no keys, by `Id`.
+  case-insensitively, then by `Id` to break ties; with no keys, by `Id`.
 * `PagedData<T>`: the page's items and `PagingMetadata` (`TotalItems`, `CurrentPage`, `PerPage`,
   `TotalPages`, `HasNextPage`). Every property is `required`, so an OpenAPI schema lists them all
   as required, and both read back from JSON.

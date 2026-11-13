@@ -37,7 +37,13 @@ internal static class PropertyLookup
             [.. keys.Select(key => key.SortBy).Where(sortBy => FindOrDefault(type, sortBy) is null)]);
     }
 
-    private static PropertyInfo? FindOrDefault(Type type, string sortBy) =>
+    /// <summary>
+    /// The property <paramref name="sortBy"/> names, if any.
+    /// </summary>
+    /// <param name="type">The sorted type.</param>
+    /// <param name="sortBy">A sort key, in any casing.</param>
+    /// <returns>The public instance property, or <see langword="null"/>.</returns>
+    public static PropertyInfo? FindOrDefault(Type type, string sortBy) =>
         type
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .FirstOrDefault(property => Matches(sortBy, property.Name));
