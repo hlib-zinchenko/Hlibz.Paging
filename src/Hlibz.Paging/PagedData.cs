@@ -3,10 +3,12 @@ using System.Diagnostics.CodeAnalysis;
 namespace Hlibz.Paging;
 
 /// <summary>
-/// One page of a list, with its <see cref="PagingMetadata"/>. Every property is
-/// <see langword="required"/>, so a JSON schema of the page (an OpenAPI document, say) lists them
-/// all as required.
+/// One page of a list, with its <see cref="PagingMetadata"/>.
 /// </summary>
+/// <remarks>
+/// Every property is <see langword="required"/>, so a JSON schema of the page (an OpenAPI
+/// document, say) lists them all as required.
+/// </remarks>
 /// <typeparam name="T">The item type.</typeparam>
 public sealed class PagedData<T>
 {

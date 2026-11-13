@@ -3,9 +3,12 @@ using System.Diagnostics.CodeAnalysis;
 namespace Hlibz.Paging;
 
 /// <summary>
-/// Where a page sits in the whole list. Every property is <see langword="required"/>, so a JSON
-/// schema of it (an OpenAPI document, say) lists them all as required.
+/// Where a page sits in the whole list.
 /// </summary>
+/// <remarks>
+/// Every property is <see langword="required"/>, so a JSON schema of it (an OpenAPI document,
+/// say) lists them all as required.
+/// </remarks>
 public sealed class PagingMetadata
 {
     /// <summary>
