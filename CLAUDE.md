@@ -27,7 +27,13 @@ Two NuGet packages released together from one tag, extracted from Lighthouse's p
   case-insensitive); no keys = sort by `Id`, and `Id` (when the type has one and no key names it)
   breaks ties, so pages over a non-unique key are stable; in memory (`EnumerableQuery`) a
   string key is null-safe, a database query keeps plain `UPPER(column)`; a key naming no property throws
-  `SortingParamNotFoundException` naming every bad key. No dependencies.
+  `SortingParamNotFoundException` naming every bad key. `SortableDto.Parse` is `TryParse` that
+  throws `FormatException`, for a string already checked. `[SortableBy(typeof(TDto))]` is a
+  DataAnnotations `ValidationAttribute` (BCL, so still no dependencies) running the same
+  `TryParse`: `null`/empty valid, errors in `NamingPolicy`'s casing (`JsonKnownNamingPolicy`,
+  an attribute argument must be a constant), `ConvertName` for documentation. It doesn't describe
+  itself: Hlibz.OpenApi.Paging (in the Hlibz.OpenApi repo) reads it into OpenAPI, so this package
+  depends on no documentation contract. No dependencies.
 - `src/Hlibz.Paging.Generators` (netstandard2.0, Roslyn 4.8, packed inside Hlibz.Paging under
   `analyzers/dotnet/cs` with `buildTransitive/Hlibz.Paging.targets`): `SortableDtoAnalyzer`
   reports `HPAG001` (not exactly one default, the runtime check as a build error) and

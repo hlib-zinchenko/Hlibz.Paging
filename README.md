@@ -127,6 +127,27 @@ Comma-separated keys, each a property optionally followed by `:asc` (the default
 `SortableDto.For<TDto>()` also exposes `Properties` and `DefaultSorting`, for documenting the
 parameter (in OpenAPI, say).
 
+## Validating a sort string
+
+`[SortableBy(typeof(TDto))]` is the same check as a DataAnnotations rule, for a query or request
+validated before it reaches your code (minimal APIs' `AddValidation()`, MVC, `Validator`, or a
+use case pipeline). It accepts `null` and an empty string (the default order), and its error is
+the parser's, naming what can be sorted by in `NamingPolicy`'s casing (as declared without one).
+Turn the checked string into sorting with `Parse`, which throws `FormatException` on a string
+that wasn't checked:
+
+```csharp
+public sealed record GetOrdersQuery(
+    [property: SortableBy(typeof(OrderDto), NamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower)]
+    string? Sort);
+
+SortingParams sorting = SortableDto.For<OrderDto>().Parse(query.Sort);
+```
+
+`ConvertName` names a property as the attribute's errors do, for documenting the parameter;
+[Hlibz.OpenApi.Paging](https://www.nuget.org/packages/Hlibz.OpenApi.Paging) writes that into
+OpenAPI documents.
+
 ## Paging
 
 `PagingParams(page, perPage)` takes the client's values as they are: a missing or out-of-range
@@ -237,7 +258,9 @@ dotnet run --project samples/Orders.Api   # http://localhost:5390
 - [Hlibz.MinimalApi.Endpoints](https://www.nuget.org/packages/Hlibz.MinimalApi.Endpoints):
   minimal API endpoints as classes, for list endpoints among the rest.
 - [Hlibz.OpenApi.AspNetCore](https://www.nuget.org/packages/Hlibz.OpenApi.AspNetCore): OpenAPI
-  transformers for Microsoft.AspNetCore.OpenApi.
+  transformers for Microsoft.AspNetCore.OpenApi;
+  [Hlibz.OpenApi.Paging](https://www.nuget.org/packages/Hlibz.OpenApi.Paging) describes a
+  `[SortableBy]` parameter or property in the document: what it sorts by and the default.
 
 ## Versioning
 

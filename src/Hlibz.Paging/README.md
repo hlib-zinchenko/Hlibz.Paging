@@ -47,6 +47,9 @@ SortableDto.ValidateAll([typeof(OrderDto).Assembly]);   // at startup
   A DTO without exactly one default is build error `HPAG001`; `ValidateAll` checks again at
   startup: every DTO in the assemblies you pass (listed by the package's source generator, no
   scanning; abstract bases skipped), or just the DTO types you pass.
+* `[SortableBy(typeof(OrderDto))]`: the same check as a DataAnnotations rule on a query's
+  sort string, so whatever validates the query rejects a bad sort; `SortableDto.Parse` then turns
+  the checked string into sorting.
 * `PagingParams`: page from 1 (default 1) and page size (default 100); missing or out-of-range
   values fall back to the defaults. `PagingParams.All` is one page with every item.
 * `SortingParams`: sort keys in order. `OrderBy(SortingParams)` sorts strings
@@ -59,6 +62,8 @@ SortableDto.ValidateAll([typeof(OrderDto).Assembly]);   // at startup
 
 - [Hlibz.Paging.EntityFrameworkCore](https://www.nuget.org/packages/Hlibz.Paging.EntityFrameworkCore):
   `PaginateAsync` loads a page from the database.
+- [Hlibz.OpenApi.Paging](https://www.nuget.org/packages/Hlibz.OpenApi.Paging): describes a
+  `[SortableBy]` parameter or property in OpenAPI documents.
 - [Hlibz.Results](https://www.nuget.org/packages/Hlibz.Results): return a bad sort string as
   `Result.Invalid(new Dictionary<string, string[]> { ["sort"] = [error] })`, so it gets the same
   error body as every other failure.

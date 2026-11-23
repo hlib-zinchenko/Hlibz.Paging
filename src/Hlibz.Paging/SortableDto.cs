@@ -187,6 +187,20 @@ public sealed class SortableDto
             out error);
     }
 
+    /// <summary>
+    /// Parses a sort string that has already been checked, by <see cref="SortableByAttribute"/>
+    /// or <see cref="TryParse(string?, out SortingParams?, out string?)"/>, as
+    /// <see cref="TryParse(string?, out SortingParams?, out string?)"/> does.
+    /// </summary>
+    /// <param name="sort">The sort string, e.g. <c>customer_name,created_at:desc</c>.</param>
+    /// <returns>The sorting, keys naming the DTO's properties as declared.</returns>
+    /// <exception cref="FormatException"><paramref name="sort"/> is invalid: it wasn't checked
+    /// first.</exception>
+    public SortingParams Parse(string? sort) =>
+        TryParse(sort, out SortingParams? sortingParams, out string? error)
+            ? sortingParams
+            : throw new FormatException(error);
+
     private static SortableDto Build([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] Type dtoType)
     {
         (PropertyInfo Property, SortableAttribute? Attribute)[] properties =
