@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace Hlibz.Paging.Internal;
 
@@ -46,8 +47,8 @@ internal static class SortPlan
 
     /// <summary>
     /// Sorts <paramref name="source"/> in memory by <paramref name="sortBy"/>: a string by its
-    /// upper case (current culture), <see langword="null"/> first, as the query sort does in
-    /// memory.
+    /// upper case (current culture), <see langword="null"/> first, any other key by
+    /// <see cref="Comparer{T}.Default"/> for its property type, as the query sort does in memory.
     /// </summary>
     /// <typeparam name="T">The item type.</typeparam>
     /// <param name="source">The items.</param>
@@ -61,13 +62,14 @@ internal static class SortPlan
         foreach ((PropertyInfo property, ListSortDirection direction) in sortBy)
         {
             Func<T, object?> key = KeyOf<T>(property);
+            IComparer<object?> comparer = ComparerFor(property.PropertyType);
             bool descending = direction == ListSortDirection.Descending;
             sorted = (sorted, descending) switch
             {
-                (null, false) => source.OrderBy(key, SortKeyComparer.Instance),
-                (null, true) => source.OrderByDescending(key, SortKeyComparer.Instance),
-                (_, false) => sorted.ThenBy(key, SortKeyComparer.Instance),
-                (_, true) => sorted.ThenByDescending(key, SortKeyComparer.Instance),
+                (null, false) => source.OrderBy(key, comparer),
+                (null, true) => source.OrderByDescending(key, comparer),
+                (_, false) => sorted.ThenBy(key, comparer),
+                (_, true) => sorted.ThenByDescending(key, comparer),
             };
         }
 
@@ -80,6 +82,27 @@ internal static class SortPlan
             : item => property.GetValue(item);
 
     /// <summary>
+    /// How to compare a property's boxed values. A type that implements the non-generic
+    /// <see cref="IComparable"/> (strings, numbers, dates, enums) compares boxed; any other, such
+    /// as a generated strongly-typed id with only <see cref="IComparable{T}"/>, through
+    /// <see cref="Comparer{T}.Default"/> for the property type, as the typed query sort compares
+    /// it. That needs dynamic code for a value type; without it (Native AOT) such a key throws
+    /// when two items are compared.
+    /// </summary>
+    /// <param name="propertyType">The sort key's property type.</param>
+    /// <returns>The comparer.</returns>
+    private static IComparer<object?> ComparerFor(Type propertyType)
+    {
+        Type valueType = Nullable.GetUnderlyingType(propertyType) ?? propertyType;
+        if (typeof(IComparable).IsAssignableFrom(valueType) || !RuntimeFeature.IsDynamicCodeSupported)
+        {
+            return SortKeyComparer.Instance;
+        }
+
+        return (IComparer<object?>)Activator.CreateInstance(typeof(BoxedComparer<>).MakeGenericType(propertyType))!;
+    }
+
+    /// <summary>
     /// Compares boxed sort keys as <see cref="Comparer{T}.Default"/> compares the unboxed ones:
     /// <see langword="null"/> first, strings by the current culture.
     /// </summary>
@@ -87,9 +110,31 @@ internal static class SortPlan
     {
         public static readonly SortKeyComparer Instance = new();
 
-        public int Compare(object? x, object? y) =>
-            x is string left && y is string right
-                ? Comparer<string>.Default.Compare(left, right)
-                : Comparer<object?>.Default.Compare(x, y);
+        public int Compare(object? x, object? y)
+        {
+            if (x is string left && y is string right)
+            {
+                return Comparer<string>.Default.Compare(left, right);
+            }
+
+            if (x is null || y is null || x is IComparable || y is IComparable)
+            {
+                return Comparer<object?>.Default.Compare(x, y);
+            }
+
+            throw new InvalidOperationException(
+                $"A {x.GetType()} sort key can't be compared in memory without dynamic code "
+                + "(Native AOT): implement the non-generic IComparable on it.");
+        }
+    }
+
+    /// <summary>
+    /// Compares boxed <typeparamref name="TKey"/> values with
+    /// <see cref="Comparer{T}.Default"/>, so <see cref="IComparable{T}"/> is used.
+    /// </summary>
+    /// <typeparam name="TKey">The sort key's property type.</typeparam>
+    private sealed class BoxedComparer<TKey> : IComparer<object?>
+    {
+        public int Compare(object? x, object? y) => Comparer<TKey>.Default.Compare((TKey)x!, (TKey)y!);
     }
 }

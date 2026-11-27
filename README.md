@@ -234,7 +234,10 @@ A type deliberately left like that can suppress it with `#pragma warning disable
   client's value before building `PagingParams` if that matters.
 * Offset paging (`OFFSET`/`LIMIT`), not keyset paging.
 * Trimming and Native AOT: both packages are marked AOT-compatible. `Paginate`,
-  `SortableDto.For<TDto>()` and `TryParse` are safe. Sorting a query (`OrderBy` on an
+  `SortableDto.For<TDto>()` and `TryParse` are safe. `Paginate` compares a key that has only
+  the generic `IComparable<T>` (a generated strongly-typed id, say) through
+  `Comparer<T>.Default`, which needs dynamic code; under Native AOT such a key throws when two
+  items tie, so give it the non-generic `IComparable` too. Sorting a query (`OrderBy` on an
   `IQueryable`, `PaginateAsync`) builds LINQ expressions at runtime, as any LINQ provider query
   does, so it carries `[RequiresDynamicCode]`/`[RequiresUnreferencedCode]` warnings, like
   EF Core's own query APIs.

@@ -14,7 +14,10 @@ Two NuGet packages released together from one tag, extracted from Lighthouse's p
   list them as required and System.Text.Json reads them back; a parameterless constructor for
   serializers and a `[SetsRequiredMembers]` one that works out `TotalPages`/`HasNextPage`), `SortingExtensions` (`OrderBy(SortingParams)` builds the
   `OrderBy`/`ThenBy` expression, strings via `ToUpper()`; in-memory `Paginate`, which sorts the
-  same plan (`Internal/SortPlan`) with delegates rather than compiling an expression), and
+  same plan (`Internal/SortPlan`) with delegates rather than compiling an expression, comparing
+  boxed keys as `Comparer<TKey>.Default` would: a key type with only `IComparable<T>`, like a
+  generated strongly-typed id, through a `BoxedComparer<TKey>` made when dynamic code is
+  supported), and
   `SortableDto`: a DTO's `[Sortable]` properties (cached per type, exactly one `IsDefault` or
   `InvalidOperationException`), `TryParse` of a client's sort string (`Internal/SortStringParser`:
   `key[:asc|desc],...`; parsed keys name properties as declared; errors name the allowed

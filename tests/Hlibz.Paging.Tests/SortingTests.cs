@@ -159,6 +159,35 @@ public sealed class SortingTests
     }
 
     [Fact]
+    public void Paginate_WithEqualKeysAndGenericallyComparableId_BreaksTiesById()
+    {
+        Order[] orders = [new(new OrderId(3), "same"), new(new OrderId(1), "same"), new(new OrderId(2), "other")];
+
+        PagedData<Order> page = orders.Paginate(SortingParams.Create().Ascending("name"), PagingParams.All);
+
+        Assert.Equal([2, 1, 3], page.Data.Select(order => order.Id.Value));
+    }
+
+    [Fact]
+    public void Paginate_WithGenericallyComparableNullableKey_MatchesTheQuerySort()
+    {
+        Order[] orders =
+        [
+            new(new OrderId(1), "a", new OrderId(5)),
+            new(new OrderId(2), "b"),
+            new(new OrderId(3), "c", new OrderId(4)),
+        ];
+        SortingParams sorting = SortingParams.Create().Descending("parent_id");
+
+        PagedData<Order> page = orders.Paginate(sorting, PagingParams.All);
+
+        Assert.Equal([1, 3, 2], page.Data.Select(order => order.Id.Value));
+        Assert.Equal(
+            orders.AsQueryable().OrderBy(sorting).Select(order => order.Id.Value),
+            page.Data.Select(order => order.Id.Value));
+    }
+
+    [Fact]
     public void Paginate_WithUnknownProperty_Throws()
     {
         Assert.Throws<SortingParamNotFoundException>(
@@ -168,7 +197,25 @@ public sealed class SortingTests
     private static int[] Sort(SortingParams sorting) =>
         [.. Items.AsQueryable().OrderBy(sorting).Select(item => item.Id)];
 
+    /// <summary>
+    /// Comparable only through <see cref="IComparable{T}"/>, as generated strongly-typed ids are.
+    /// </summary>
+    public readonly record struct OrderId(int Value) : IComparable<OrderId>
+    {
+        public static bool operator <(OrderId left, OrderId right) => left.CompareTo(right) < 0;
+
+        public static bool operator <=(OrderId left, OrderId right) => left.CompareTo(right) <= 0;
+
+        public static bool operator >(OrderId left, OrderId right) => left.CompareTo(right) > 0;
+
+        public static bool operator >=(OrderId left, OrderId right) => left.CompareTo(right) >= 0;
+
+        public int CompareTo(OrderId other) => Value.CompareTo(other.Value);
+    }
+
     public sealed record Item(int Id, string Name, int Rank, DateTime CreatedAt);
 
     public sealed record Person(int Id, string? Name);
+
+    public sealed record Order(OrderId Id, string Name, OrderId? ParentId = null);
 }
