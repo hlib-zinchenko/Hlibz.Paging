@@ -19,6 +19,29 @@ string is checked against it, and one call sorts, counts and loads the page.
 
 Targets .NET 10 and 11.
 
+## A family of packages
+
+Hlibz.Paging is one of five packages I build to set up new .NET APIs the way I want them:
+[Hlibz.Results](https://github.com/hlib-zinchenko/Hlibz.Results),
+[Hlibz.UseCases](https://github.com/hlib-zinchenko/Hlibz.UseCases),
+[Hlibz.MinimalApi.Endpoints](https://github.com/hlib-zinchenko/Hlibz.MinimalApi.Endpoints),
+[Hlibz.OpenApi](https://github.com/hlib-zinchenko/Hlibz.OpenApi) and **Hlibz.Paging**. Each one
+works on its own, and they work best together:
+[Hlibz.Stack](https://github.com/hlib-zinchenko/Hlibz.Stack) is an API where all five meet, along
+with [Hlibz.Redoc](https://github.com/hlib-zinchenko/Hlibz.Redoc) and
+[Hlibz.McpDocs.AspNetCore](https://github.com/hlib-zinchenko/Hlibz.McpDocs.AspNetCore).
+
+Because they follow what my projects need, new minor and major versions come often. When .NET gives
+me a better way to do something, it goes into a new major straight away: Hlibz.Results 2.0 came a
+week after 1.0, and the first 3.0 preview, built on C# 15 unions, nine days after 2.0. Breaking
+changes only ever come in a major, its
+[release notes](https://github.com/hlib-zinchenko/Hlibz.Paging/releases) list them first, and older
+versions stay on NuGet, so read the notes before you move up a major.
+
+You're welcome to use them, and to
+[open an issue](https://github.com/hlib-zinchenko/Hlibz.Paging/issues) when something is wrong or
+missing.
+
 ## Quick start
 
 Mark what clients may sort by, and the default order:
@@ -83,7 +106,10 @@ app.MapGet("/orders", async (
 }
 ```
 
-(property names follow your JSON naming policy).
+(property names follow your JSON naming policy). With
+[Hlibz.Results](https://github.com/hlib-zinchenko/Hlibz.Results), return a bad sort string as
+`new ValidationFailed(new Dictionary<string, string[]> { ["sort"] = [error] })` instead, so it
+gets the same error body as every other failure.
 
 A DTO without exactly one default is a build error, [`HPAG001`](#build-errors): the package's
 analyzer checks every DTO with a `[Sortable]` property as it compiles. To check again at startup
@@ -112,17 +138,17 @@ SortableDto.ValidateAll([typeof(OrderDto), typeof(CustomerDto)]);
 Comma-separated keys, each a property optionally followed by `:asc` (the default) or `:desc`:
 `customer_name,created_at:desc`. An empty sort string is the DTO's default order.
 
-* Keys may be written in any casing: `created_at`, `createdAt`, `CreatedAt` and `created-at` all
+- Keys may be written in any casing: `created_at`, `createdAt`, `CreatedAt` and `created-at` all
   name `CreatedAt`. The parsed keys name the properties as declared.
-* Only `[Sortable]` properties are accepted, so clients can't sort by columns you didn't mean to
+- Only `[Sortable]` properties are accepted, so clients can't sort by columns you didn't mean to
   expose (or index).
-* Errors are written for the client and name what can be sorted by, in the casing you pass
+- Errors are written for the client and name what can be sorted by, in the casing you pass
   (`JsonNamingPolicy.SnakeCaseLower` above; as declared without one):
 
   ```text
   Can't sort by total. Sort by: id, customer_name, created_at.
   ```
-* Strings sort case-insensitively (`ToUpper()` in the query; in memory a `null` sorts first).
+- Strings sort case-insensitively (`ToUpper()` in the query; in memory a `null` sorts first).
 
 `SortableDto.For<TDto>()` also exposes `Properties` and `DefaultSorting`, for documenting the
 parameter (in OpenAPI, say).
@@ -229,11 +255,11 @@ A type deliberately left like that can suppress it with `#pragma warning disable
 
 ## Limitations
 
-* One level of properties: no `customer.name`.
-* No maximum page size: `new PagingParams(1, int.MaxValue)` is `PagingParams.All`. Cap the
+- One level of properties: no `customer.name`.
+- No maximum page size: `new PagingParams(1, int.MaxValue)` is `PagingParams.All`. Cap the
   client's value before building `PagingParams` if that matters.
-* Offset paging (`OFFSET`/`LIMIT`), not keyset paging.
-* Trimming and Native AOT: both packages are marked AOT-compatible. `Paginate`,
+- Offset paging (`OFFSET`/`LIMIT`), not keyset paging.
+- Trimming and Native AOT: both packages are marked AOT-compatible. `Paginate`,
   `SortableDto.For<TDto>()` and `TryParse` are safe. `Paginate` compares a key that has only
   the generic `IComparable<T>` (a generated strongly-typed id, say) through
   `Comparer<T>.Default`, which needs dynamic code; under Native AOT such a key throws when two
@@ -244,7 +270,7 @@ A type deliberately left like that can suppress it with `#pragma warning disable
 
 ## Samples
 
-[`samples/Orders.Api`](https://github.com/hlib-zinchenko/Hlibz.Paging/blob/main/samples/README.md)
+[`samples/Orders.Api`](samples/README.md)
 is a plain minimal API on EF Core with SQLite in memory: paged and sorted orders from the
 database, a bad sort key as a `400`, every order in one query with `PagingParams.All`, and
 customers paged in memory, with a `.http` file for each request.
@@ -253,23 +279,11 @@ customers paged in memory, with a `.http` file for each request.
 dotnet run --project samples/Orders.Api   # http://localhost:5390
 ```
 
-## Related packages
-
-- [Hlibz.Results](https://www.nuget.org/packages/Hlibz.Results): return a bad sort string as
-  `Result.Invalid(new Dictionary<string, string[]> { ["sort"] = [error] })`, so it gets the same
-  error body as every other failure.
-- [Hlibz.MinimalApi.Endpoints](https://www.nuget.org/packages/Hlibz.MinimalApi.Endpoints):
-  minimal API endpoints as classes, for list endpoints among the rest.
-- [Hlibz.OpenApi.AspNetCore](https://www.nuget.org/packages/Hlibz.OpenApi.AspNetCore): OpenAPI
-  transformers for Microsoft.AspNetCore.OpenApi;
-  [Hlibz.OpenApi.Paging](https://www.nuget.org/packages/Hlibz.OpenApi.Paging) describes a
-  `[SortableBy]` parameter or property in the document: what it sorts by and the default.
-
 ## Versioning
 
-Every package in this repository is released under one version, from one `vX.Y.Z` tag. EF Core
-is declared as a minimum for each target framework (10.0.15 on .NET 10, 11.0.0 on .NET 11): a
-newer patch of it needs no new release here, reference it in your app and NuGet uses it.
+Every package in this repository is released under one version, from one `vX.Y.Z` tag. EF Core is
+declared as a minimum for each target framework (10.0.15 on .NET 10, 11.0.0 on .NET 11): a newer
+patch of it needs no new release here, reference it in your app and NuGet uses it.
 
 Release notes: [GitHub Releases](https://github.com/hlib-zinchenko/Hlibz.Paging/releases).
 

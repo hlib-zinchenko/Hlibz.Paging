@@ -26,9 +26,17 @@ It sorts in the database (strings case-insensitively), runs a `COUNT`, then load
 in one. Sort the projected DTO when its property names differ from the entity's: sort keys name
 the type being sorted.
 
-## Related packages
+Targets .NET 10 and 11.
 
-- [Hlibz.Paging](https://www.nuget.org/packages/Hlibz.Paging): `[Sortable]`, `SortableDto` and
-  `PagingParams`, which this package builds on.
+## A family of packages
 
-Full documentation and a sample: [github.com/hlib-zinchenko/Hlibz.Paging](https://github.com/hlib-zinchenko/Hlibz.Paging).
+One of five packages I build to set up new .NET APIs the way I want them: Hlibz.Results,
+Hlibz.UseCases, Hlibz.MinimalApi.Endpoints, Hlibz.OpenApi and Hlibz.Paging. Each works on its own,
+and they work best together, as in [Hlibz.Stack](https://github.com/hlib-zinchenko/Hlibz.Stack). New
+minor and major versions come often, a new major whenever .NET gives me a better way to do
+something. Breaking changes only ever come in a major and are listed first in its
+[release notes](https://github.com/hlib-zinchenko/Hlibz.Paging/releases). You're welcome to use the
+packages, and to [open an issue](https://github.com/hlib-zinchenko/Hlibz.Paging/issues) when
+something is wrong or missing.
+
+Full documentation and samples: [github.com/hlib-zinchenko/Hlibz.Paging](https://github.com/hlib-zinchenko/Hlibz.Paging).
